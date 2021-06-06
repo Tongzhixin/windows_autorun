@@ -5,8 +5,12 @@
 #include <iostream>
 #include <string.h>
 #include <string>
+#include <QString>
+#include <Shlwapi.h>
 
-
+BOOL GetFileVersionString(LPCTSTR pFileName, LPCTSTR pName /* = NULL */, LPTSTR ptBuf, UINT lenBuf);
+void GetFileDescription(QString filePath, QString *fileDescription);
+void GetDllDescription(QString path, QString *fileDescription);
 
 BOOL GetFileVersionString(LPCTSTR pFileName, LPCTSTR pName /* = NULL */, LPTSTR ptBuf, UINT lenBuf)
 {
@@ -132,7 +136,30 @@ End:
 
     return bRetVal;
 }
+void GetFileDescription(QString filePath, QString *fileDescription)
+{
+    TCHAR* ptszStr = new TCHAR[1024];
 
+    BOOL bRet = GetFileVersionString(filePath.toStdWString().c_str(),
+        _T("FileDescription"), ptszStr, 1024);
+
+    if (bRet)
+        *fileDescription = QString::fromWCharArray(ptszStr);
+    else
+        *fileDescription = "";
+
+    delete[] ptszStr;
+}
+
+void GetDllDescription(QString path, QString *fileDescription)
+{
+    TCHAR* ptszStr = new TCHAR[1024];
+    if (SHLoadIndirectString(path.toStdWString().c_str(), ptszStr, 1024, NULL) == S_OK)
+        *fileDescription = QString::fromWCharArray(ptszStr);
+    else
+        *fileDescription = "";
+    delete[] ptszStr;
+}
 
 
 #endif // DESCRIPTION_H
