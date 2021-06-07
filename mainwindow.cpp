@@ -35,18 +35,18 @@ MainWindow::MainWindow(QWidget *parent)
     initTablePara(ui->tableWidget_task);
     initTablePara(ui->tableWidget_dll);
 
-    ui->stackedWidget->setCurrentIndex(0);
-    ui->stackedWidget->show();
-
+    //ui->stackedWidget->setCurrentIndex(0);
+    //ui->stackedWidget->show();
+    ui->tabWidget->setCurrentIndex(3);
+    /*
     foreach(QString path, QStringList logon)
     {
         initTableLogon(ui->tableWidget_logon, HKLM, path);
         initTableLogon(ui->tableWidget_logon, HKCU, path);
     }
-
-    initTableService(ui->tableWidget_service,HKLM,services);
     initTableDriver(ui->tableWidget_driver,HKLM,services);
-
+    initTableService(ui->tableWidget_service,HKLM,services);
+    */
 }
 
 MainWindow::~MainWindow()
@@ -89,8 +89,10 @@ void setTableItem(QTableWidget* t, int rowIndex, QString imagePath, QString desc
     VerifyEmbeddedSignature(imagePath.toStdWString().c_str(), buf_verify);
     QString isVerified = *buf_verify;
 
-    QString *buf_pub = new QString;
-    GetSignaturePublisher(char2TCHAR(QString2char(imagePath)), buf_pub);
+    QString *buf_pub = new QString("");
+
+    TCHAR* file_path = char2TCHAR(imagePath.toStdString().c_str());
+    GetSignaturePublisher(file_path, buf_pub);
     QString publisher = isVerified + " " + *buf_pub;
 
     QTableWidgetItem* timeStampItem = new QTableWidgetItem(timestamp);
@@ -106,6 +108,8 @@ void setTableItem(QTableWidget* t, int rowIndex, QString imagePath, QString desc
     delete buf_description;
     delete buf_verify;
     delete buf_pub;
+    delete [] file_path;
+    file_path = NULL;
 }
 void initTableLogon(QTableWidget* t, HKEY rootKey, QString path){
     map<string, string> regMap = read_reg(rootKey, path.toLocal8Bit());
@@ -179,7 +183,6 @@ void initTableService(QTableWidget* t,HKEY rootKey, QString path ) {
 }
 void initTableDriver(QTableWidget* t,HKEY rootKey, QString path){
     map<int, string> subkeyMap;
-    map<char*,char*> regMap;
     QString key, imagePath;
     int rowIndex = t->rowCount();
 
@@ -222,14 +225,22 @@ void initTableDriver(QTableWidget* t,HKEY rootKey, QString path){
     }
 
 }
+void initTableTask(QTableWidget* t) {
+    map<string, string> taskMap;
+    QString key, imagePath;
+    int rowIndex = t->rowCount();
+}
 
 void initTablePara(QTableWidget* t){
-    t->setColumnWidth(0,20);
-    t->setColumnWidth(1,145);
-    t->setColumnWidth(2,210);
-    t->setColumnWidth(3,200);
-    t->setColumnWidth(4,420);
-    t->setColumnWidth(5,200);
+    QStringList headerlist = {"icon","entry","description","publisher","path","time"};
+    t->setHorizontalHeaderLabels(headerlist);
+    t->verticalHeader()->setVisible(false);
+    t->setColumnWidth(0,40);
+    t->setColumnWidth(1,150);
+    t->setColumnWidth(2,250);
+    t->setColumnWidth(3,150);
+    t->setColumnWidth(4,300);
+    t->setColumnWidth(5,180);
 }
 void drawHeader(QTableWidget* t,int rowIndex, QString path){
     t->setRowCount(rowIndex + 1);
@@ -239,24 +250,6 @@ void drawHeader(QTableWidget* t,int rowIndex, QString path){
     t->setSpan(rowIndex, 0, 1, 6);
 }
 
-void MainWindow::on_logon_clicked(){
-
-    ui->stackedWidget->setCurrentIndex(0);
-
-}
-void MainWindow::on_service_clicked(){
-    ui->stackedWidget->setCurrentIndex(1);
-
-}
-void MainWindow::on_driver_clicked(){
-    ui->stackedWidget->setCurrentIndex(2);
-}
-void MainWindow::on_sheduletask_clicked(){
-    ui->stackedWidget->setCurrentIndex(3);
-}
-void MainWindow::on_knowndll_clicked(){
-    ui->stackedWidget->setCurrentIndex(4);
-}
 
 void RepairString(QString *str)
 {

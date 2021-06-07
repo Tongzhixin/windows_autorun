@@ -38,10 +38,10 @@ BOOL GetSignaturePublisher(TCHAR *path, QString *buf){
     DWORD dwSignerInfo;
     CERT_INFO CertInfo;
     SPROG_PUBLISHERINFO ProgPubInfo;
+    ZeroMemory(&ProgPubInfo, sizeof(ProgPubInfo));
 #ifdef UNICODE
     lstrcpynW(szFileName, path, MAX_PATH);
 #endif
-    //    _tprintf(_T("Subject Name: %s\n"), szFileName);
         // Get message handle and store handle from the signed file.
         fResult = CryptQueryObject(CERT_QUERY_OBJECT_FILE,
                                     szFileName,
@@ -57,7 +57,7 @@ BOOL GetSignaturePublisher(TCHAR *path, QString *buf){
         if (!fResult)
         {
             *buf = "";
-            return 1;
+            return 0;
         }
         // Get signer information size.
         fResult = CryptMsgGetParam(hMsg,
@@ -66,12 +66,14 @@ BOOL GetSignaturePublisher(TCHAR *path, QString *buf){
                                     NULL,
                                     &dwSignerInfo);
         if (!fResult)
-            return 1;
+            return 0;
 
         // Allocate memory for signer information.
         pSignerInfo = (PCMSG_SIGNER_INFO)LocalAlloc(LPTR, dwSignerInfo);
-        if (!pSignerInfo)
-            return 1;
+        if (!pSignerInfo){
+            //return 0;
+            ;
+        }
 
 
         // Get Signer Information.
@@ -81,30 +83,11 @@ BOOL GetSignaturePublisher(TCHAR *path, QString *buf){
                                     (PVOID)pSignerInfo,
                                     &dwSignerInfo);
         if (!fResult)
-            return 1;
+            return 0;
 
         // Get program name and publisher information from
         // signer info structure.
-        if (GetProgAndPublisherInfo(pSignerInfo, &ProgPubInfo))
-        {
-            if (ProgPubInfo.lpszProgramName != NULL)
-            {
-    //            wprintf(L"Program Name : %s\n",
-    //                ProgPubInfo.lpszProgramName);
-            }
-
-            if (ProgPubInfo.lpszPublisherLink != NULL)
-            {
-                //wprintf(L"Publisher Link : %s\n",
-                //    ProgPubInfo.lpszPublisherLink);
-            }
-
-            if (ProgPubInfo.lpszMoreInfoLink != NULL)
-            {
-    //            wprintf(L"MoreInfo Link : %s\n",
-    //                ProgPubInfo.lpszMoreInfoLink);
-            }
-        }
+        GetProgAndPublisherInfo(pSignerInfo, &ProgPubInfo);
 
         // Search for the signer certificate in the temporary
         // certificate store.
@@ -118,48 +101,12 @@ BOOL GetSignaturePublisher(TCHAR *path, QString *buf){
                                                     (PVOID)&CertInfo,
                                                     NULL);
         if (!pCertContext)
-            return 1;
+            return 0;
 
         // Print Signer certificate information.
         PrintCertificateInfo(pCertContext, buf);
 
-        /*
-        // Get the timestamp certificate signerinfo structure.
-        if (GetTimeStampSignerInfo(pSignerInfo, &pCounterSignerInfo))
-        {
-            // Search for Timestamp certificate in the temporary
-            // certificate store.
-            CertInfo.Issuer = pCounterSignerInfo->Issuer;
-            CertInfo.SerialNumber = pCounterSignerInfo->SerialNumber;
-            pCertContext = CertFindCertificateInStore(hStore,
-                                                ENCODING,
-                                                0,
-                                                CERT_FIND_SUBJECT_CERT,
-                                                (PVOID)&CertInfo,
-                                                NULL);
-            if (!pCertContext)
-            {
-                _tprintf(_T("CertFindCertificateInStore failed with %x\n"),
-                    GetLastError());
-                ;
-            }
-            // Print timestamp certificate information.
-            _tprintf(_T("TimeStamp Certificate:\n\n"));
-            PrintCertificateInfo(pCertContext, publisher);
-            _tprintf(_T("\n"));
-            // Find Date of timestamp.
-            if (GetDateOfTimeStamp(pCounterSignerInfo, &st))
-            {
-                _tprintf(_T("Date of TimeStamp : %02d/%02d/%04d %02d:%02d\n"),
-                                            st.wMonth,
-                                            st.wDay,
-                                            st.wYear,
-                                            st.wHour,
-                                            st.wMinute);
-            }
-            _tprintf(_T("\n"));
-        }
-        */
+
 
         // Clean up.
         if (ProgPubInfo.lpszProgramName != NULL)
@@ -174,7 +121,7 @@ BOOL GetSignaturePublisher(TCHAR *path, QString *buf){
         if (pCertContext != NULL) CertFreeCertificateContext(pCertContext);
         if (hStore != NULL) CertCloseStore(hStore, 0);
         if (hMsg != NULL) CryptMsgClose(hMsg);
-        return 0;
+        return fResult;
 
 }
 BOOL PrintCertificateInfo(PCCERT_CONTEXT pCertContext, QString *buf)
@@ -188,8 +135,7 @@ BOOL PrintCertificateInfo(PCCERT_CONTEXT pCertContext, QString *buf)
                                      0,
                                      NULL,
                                      NULL,
-                                     0)))
-    {
+                                     0))){
         fReturn = FALSE;
         return fReturn;
     }
@@ -378,6 +324,7 @@ BOOL VerifyEmbeddedSignature(LPCWSTR pwszSourceFile, QString *buf)
     FileData.pcwszFilePath = pwszSourceFile;
     FileData.hFile = NULL;
     FileData.pgKnownSubject = NULL;
+    BOOL flag = 0;
 
     GUID WVTPolicyGUID = WINTRUST_ACTION_GENERIC_VERIFY_V2;
     WINTRUST_DATA WinTrustData;
@@ -447,7 +394,8 @@ BOOL VerifyEmbeddedSignature(LPCWSTR pwszSourceFile, QString *buf)
 //            wprintf_s(L"The file \"%d\" is signed and the signature "
 //            L"was verified.\n",
 //            WVTPolicyGUID);
-            *buf = "(Verified)";
+            *buf = "(signed)";
+            flag = 1;
             break;
 
         case TRUST_E_NOSIGNATURE:
@@ -463,17 +411,8 @@ BOOL VerifyEmbeddedSignature(LPCWSTR pwszSourceFile, QString *buf)
                 // The file was not signed.
 //                wprintf_s(L"The file \"%s\" is not signed.\n",
 //                    pwszSourceFile);
-                *buf = "(Not Verified)";
+                *buf = "(not signed)";
             }
-            else
-            {
-                // The signature was not valid or there was an error
-                // opening the file.
-                wprintf_s(L"An unknown error occurred trying to "
-                    L"verify the signature of the \"%s\" file.\n",
-                    pwszSourceFile);
-            }
-
             break;
 
         case TRUST_E_EXPLICIT_DISTRUST:
@@ -482,26 +421,6 @@ BOOL VerifyEmbeddedSignature(LPCWSTR pwszSourceFile, QString *buf)
 //            wprintf_s(L"The signature is present, but specifically "
 //                L"disallowed.\n");
             *buf = "(Disallowed)";
-            break;
-
-        case TRUST_E_SUBJECT_NOT_TRUSTED:
-            // The user clicked "No" when asked to install and run.
-            wprintf_s(L"The signature is present, but not "
-                L"trusted.\n");
-            break;
-
-        case CRYPT_E_SECURITY_SETTINGS:
-            /*
-            The hash that represents the subject or the publisher
-            was not explicitly trusted by the admin and the
-            admin policy has disabled user trust. No signature,
-            publisher or time stamp errors.
-            */
-            wprintf_s(L"CRYPT_E_SECURITY_SETTINGS - The hash "
-                L"representing the subject or the publisher wasn't "
-                L"explicitly trusted by the admin and admin policy "
-                L"has disabled user trust. No signature, publisher "
-                L"or timestamp errors.\n");
             break;
 
         default:
@@ -521,7 +440,7 @@ BOOL VerifyEmbeddedSignature(LPCWSTR pwszSourceFile, QString *buf)
         &WVTPolicyGUID,
         &WinTrustData);
 
-    return true;
+    return flag;
 }
 
 

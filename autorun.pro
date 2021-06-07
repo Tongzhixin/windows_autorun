@@ -26,6 +26,7 @@ HEADERS += \
     convert.h \
     description.h \
     mainwindow.h \
+    readTask.h \
     regread.h \
     signature.h
 

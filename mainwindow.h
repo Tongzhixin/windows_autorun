@@ -27,12 +27,7 @@ public:
     ~MainWindow();
 
 
-private slots:
-    void on_logon_clicked();
-    void on_service_clicked();
-    void on_driver_clicked();
-    void on_sheduletask_clicked();
-    void on_knowndll_clicked();
+
 
 private:
     Ui::MainWindow *ui;

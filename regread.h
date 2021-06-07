@@ -143,7 +143,7 @@ string read_imagepath(HKEY aim_rootkey, LPCWSTR key_data)
     string tmp2 = tmp1;
     delete [] tmp1;
     tmp1 = NULL;
-    qDebug()<<"imagepath:"<<tmp2.c_str();
+    //qDebug()<<"imagepath:"<<tmp2.c_str();
     //cout << lpvalue << endl;
     return tmp2;
 }
@@ -159,7 +159,7 @@ DWORD read_type(HKEY aim_rootkey, LPCWSTR key_data)
         ret1 = RegQueryValueEx(cpp_key, _T("Type"), 0, &dwtype, NULL, &dwvalue);
         ret1 = RegQueryValueEx(cpp_key, _T("Type"), 0, &dwtype, (LPBYTE)&type, &dwvalue);
         if(ret1 == ERROR_SUCCESS) {
-            qDebug()<<type;
+
             return type;
         } else {
             return 100000;
@@ -191,7 +191,7 @@ string read_description(HKEY aim_rootkey, LPCWSTR key_data)
     string tmp2 = tmp1;
     delete [] tmp1;
     tmp1 = NULL;
-    qDebug()<<"description:"<<tmp2.c_str();
+    //qDebug()<<"description:"<<tmp2.c_str();
     //cout << lpvalue << endl;
     return tmp2;
     //cout << lpvalue << endl;
