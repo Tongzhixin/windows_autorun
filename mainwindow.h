@@ -26,18 +26,13 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+
 private slots:
     void on_logon_clicked();
     void on_service_clicked();
     void on_driver_clicked();
     void on_sheduletask_clicked();
     void on_knowndll_clicked();
-
-    void on_tableWidget_logon_itemClicked(QTableWidgetItem *item);
-
-
-
-
 
 private:
     Ui::MainWindow *ui;

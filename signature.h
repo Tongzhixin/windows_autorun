@@ -11,7 +11,6 @@
 
 #define ENCODING (X509_ASN_ENCODING | PKCS_7_ASN_ENCODING)
 
-#pragma comment (lib,"wintrust")
 typedef struct {
     LPWSTR lpszProgramName;
     LPWSTR lpszPublisherLink;

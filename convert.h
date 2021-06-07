@@ -12,7 +12,7 @@ char* TCHAR2char(const TCHAR* STR);
 TCHAR* char2TCHAR(const char* str);
 std::string TCHAR2STRING(TCHAR *STR);
 char* QString2char(QString qstr);
-
+std::string DwordToString(DWORD val);
 char* TCHAR2char(const TCHAR* STR)
 {
     int size = WideCharToMultiByte(CP_ACP, 0, STR, -1, NULL, 0, NULL, FALSE);
@@ -56,5 +56,11 @@ char* QString2char(QString qstr)
     QByteArray byte = qstr.toLocal8Bit();
     ch = byte.data();
     return ch;
+}
+
+std::string DwordToString(DWORD val)
+{
+    std::string cur_str = std::to_string(val);
+    return cur_str;
 }
 #endif // CONVERT_H

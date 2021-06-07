@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1115</width>
-    <height>741</height>
+    <width>1284</width>
+    <height>882</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -82,14 +82,14 @@
    <widget class="QStackedWidget" name="stackedWidget">
     <property name="geometry">
      <rect>
-      <x>20</x>
+      <x>30</x>
       <y>60</y>
-      <width>881</width>
-      <height>471</height>
+      <width>1211</width>
+      <height>511</height>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>4</number>
     </property>
     <widget class="QWidget" name="page">
      <widget class="QTableWidget" name="tableWidget_logon">
@@ -97,8 +97,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>881</width>
-        <height>471</height>
+        <width>1211</width>
+        <height>511</height>
        </rect>
       </property>
       <property name="columnCount">
@@ -118,8 +118,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>881</width>
-        <height>471</height>
+        <width>1201</width>
+        <height>511</height>
        </rect>
       </property>
       <property name="columnCount">
@@ -139,8 +139,8 @@
        <rect>
         <x>-50</x>
         <y>10</y>
-        <width>921</width>
-        <height>461</height>
+        <width>1251</width>
+        <height>501</height>
        </rect>
       </property>
       <property name="columnCount">
@@ -160,8 +160,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>881</width>
-        <height>471</height>
+        <width>1201</width>
+        <height>511</height>
        </rect>
       </property>
       <property name="columnCount">
@@ -181,34 +181,18 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>881</width>
-        <height>471</height>
+        <width>1201</width>
+        <height>511</height>
        </rect>
       </property>
       <property name="columnCount">
-       <number>6</number>
+       <number>7</number>
       </property>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-     </widget>
-    </widget>
-    <widget class="QWidget" name="page_6">
-     <widget class="QTableWidget" name="tableWidget_6">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>0</y>
-        <width>881</width>
-        <height>471</height>
-       </rect>
-      </property>
-      <property name="columnCount">
-       <number>6</number>
-      </property>
+      <column>
+       <property name="text">
+        <string>新建列</string>
+       </property>
+      </column>
       <column/>
       <column/>
       <column/>
@@ -218,136 +202,9 @@
      </widget>
     </widget>
    </widget>
-   <widget class="QPushButton" name="button_icon">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>540</y>
-      <width>31</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_name">
-    <property name="geometry">
-     <rect>
-      <x>60</x>
-      <y>540</y>
-      <width>72</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>TextLabel</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_time">
-    <property name="geometry">
-     <rect>
-      <x>390</x>
-      <y>540</y>
-      <width>72</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>TextLabel</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_description">
-    <property name="geometry">
-     <rect>
-      <x>60</x>
-      <y>580</y>
-      <width>72</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>TextLabel</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_publisher">
-    <property name="geometry">
-     <rect>
-      <x>60</x>
-      <y>620</y>
-      <width>72</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>TextLabel</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_path">
-    <property name="geometry">
-     <rect>
-      <x>60</x>
-      <y>660</y>
-      <width>72</width>
-      <height>15</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>TextLabel</string>
-    </property>
-   </widget>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1115</width>
-     <height>26</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menuautorun">
-    <property name="title">
-     <string>autorun</string>
-    </property>
-   </widget>
-   <addaction name="menuautorun"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>service</sender>
-   <signal>clicked(bool)</signal>
-   <receiver>tableWidget_service</receiver>
-   <slot>show()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>175</x>
-     <y>49</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>460</x>
-     <y>321</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>logon</sender>
-   <signal>clicked()</signal>
-   <receiver>tableWidget_logon</receiver>
-   <slot>show()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>55</x>
-     <y>49</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>460</x>
-     <y>321</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>
