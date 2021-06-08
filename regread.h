@@ -25,6 +25,7 @@ map<int, string> read_subkey(HKEY root_key,LPCSTR key_path);
 string read_imagepath(HKEY aim_rootkey, LPCWSTR key_data);
 string read_description(HKEY aim_rootkey, LPCWSTR key_data);
 DWORD read_type(HKEY aim_rootkey, LPCWSTR key_data);
+DWORD read_start(HKEY aim_rootkey, LPCWSTR key_data);
 map<int, string> read_subkey(HKEY root_key,LPCSTR key_path) {
     HKEY hKey;
     map<int, string> reg_map;
@@ -197,7 +198,29 @@ string read_description(HKEY aim_rootkey, LPCWSTR key_data)
     return tmp2;
     //cout << lpvalue << endl;
 }
+DWORD read_start(HKEY aim_rootkey, LPCWSTR key_data)
+{
+    HKEY cpp_key;
+    DWORD type = 100;
+    DWORD dwtype = REG_DWORD;
+    DWORD dwvalue = sizeof(DWORD);
+    DWORD ret,ret1;
+    ret = RegOpenKeyEx(aim_rootkey, key_data, 0, KEY_READ, &cpp_key);
+    if (ret == ERROR_SUCCESS){
+        ret1 = RegQueryValueEx(cpp_key, _T("Start"), 0, &dwtype, NULL, &dwvalue);
+        ret1 = RegQueryValueEx(cpp_key, _T("Start"), 0, &dwtype, (LPBYTE)&type, &dwvalue);
+        if(ret1 == ERROR_SUCCESS) {
+            return type;
+        } else {
+            return 100;
+        }
+        RegCloseKey(cpp_key);
+    }
+    return 100;
 
+    //cout << type << endl;
+
+}
 
 
 

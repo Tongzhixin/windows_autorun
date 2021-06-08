@@ -55,4 +55,17 @@ std::string DwordToString(DWORD val)
     std::string cur_str = std::to_string(val);
     return cur_str;
 }
+std::string Wchar_tToString(wchar_t *wchar)
+{
+    wchar_t * wText = wchar;
+    DWORD dwNum = WideCharToMultiByte(CP_OEMCP,NULL,wText,-1,NULL,0,NULL,FALSE);
+    char *psText;
+    psText = new char[dwNum];
+    WideCharToMultiByte (CP_OEMCP,NULL,wText,-1,psText,dwNum,NULL,FALSE);
+    std::string szDst = psText;
+    delete []psText;
+    return szDst;
+}
+
+
 #endif // CONVERT_H

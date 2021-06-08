@@ -21,7 +21,7 @@ void initTableDll(QTableWidget* t, HKEY rootKey, QString path );
 void initTableDriver(QTableWidget* t,HKEY rootKey, QString path);
 void setTableItem(QTableWidget* t, int rowIndex, QString imagePath, QString description);
 void RepairString(QString *str);
-
+void initTableLogonDir(QTableWidget* t);
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -38,7 +38,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     //ui->stackedWidget->setCurrentIndex(0);
     //ui->stackedWidget->show();
-    ui->tabWidget->setCurrentIndex(4);
+    ui->tabWidget->setCurrentIndex(0);
 
     foreach(QString path, QStringList logon)
     {
@@ -51,6 +51,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     initTableTask(ui->tableWidget_task);
     initTableDll(ui->tableWidget_dll,HKLM,knowndlls);
+    initTableLogonDir(ui->tableWidget_logon);
+
+
 }
 
 MainWindow::~MainWindow()
@@ -58,6 +61,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 void test(){
+    /*
     HKEY rootKey = HKLM;
     QString path = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
     map<string, string> regMap = read_reg(rootKey, path.toLocal8Bit());
@@ -70,6 +74,7 @@ void test(){
         qDebug()<<key<<":"<<imagePath;
         regIt++;
     }
+    */
 
 }
 
@@ -141,7 +146,47 @@ void initTableLogon(QTableWidget* t, HKEY rootKey, QString path){
         regIt++;
     }
 }
+void initTableLogonDir(QTableWidget* t) {
+    map<string, map<string,string>> allData;
+    createConnectToStart(allData);
+    map<string, map<string,string>>::iterator fIt = allData.begin();
+    int rowIndex;
+    QString key, imagePath;
+    while (fIt != allData.end()) {
+        rowIndex = t->rowCount();
+        drawHeader(t, rowIndex, QString::fromStdString(fIt->first));
+        map<string,string> subMap = fIt->second;
+        map<string, string>::iterator subIt = subMap.begin();
+        while (subIt != subMap.end()) {
+            rowIndex++;
+            t->setRowCount(rowIndex+1);
+            key = QString::fromStdString(subIt->first);
+            imagePath = QString::fromStdString(subIt->second);
+            if(imagePath.endsWith("lnk") || imagePath.endsWith("LNK")) {
+                QFileInfo fileInfo(imagePath);
+                imagePath = fileInfo.canonicalFilePath();
+            }
+            if(imagePath.endsWith("ini")) {
+                rowIndex--;
+                t->setRowCount(rowIndex+1);
+                subIt++;
+                continue;
+            }
+            if(key.endsWith("lnk")) {
+                key.remove(key.length()-4,4);
+            }
+            t->setItem(rowIndex, 1, new QTableWidgetItem(key));
+            setTableItem(t,rowIndex,imagePath,"");
+            //t->setItem(rowIndex, 4, new QTableWidgetItem(imagePath));
+            subIt++;
+        }
+        fIt++;
 
+    }
+
+
+
+}
 void initTableDll(QTableWidget* t, HKEY rootKey, QString path){
     map<string, string> regMap = read_reg(rootKey, path.toLocal8Bit());
 
@@ -178,7 +223,7 @@ void initTableService(QTableWidget* t,HKEY rootKey, QString path ) {
 
     string subPath;
     string tmpPath;
-    DWORD type;
+    DWORD type, start;
     map<int, string>::iterator subIt = subkeyMap.begin();
 
     QString HKheader = (rootKey==HKLM) ? "HKLM\\" : "HKCU\\";
@@ -193,17 +238,21 @@ void initTableService(QTableWidget* t,HKEY rootKey, QString path ) {
         string m_description, m_imagepath;
         type = read_type(rootKey,newSubKey);
         if (type>=16 && type<100000 ) {
-            rowIndex++;
-            t->setRowCount(rowIndex+1);
-            m_description = read_description(rootKey,newSubKey);
-            m_imagepath = read_imagepath(rootKey,newSubKey);
-            t->setItem(rowIndex, 1, new QTableWidgetItem(key));
-            QString imagePath = QString::fromStdString(m_imagepath);
-            QString description = QString::fromStdString(m_description);
-            RepairString(&imagePath);
-            if (!imagePath.isEmpty()) {
-                setTableItem(t,rowIndex,imagePath,description);
+            start = read_start(rootKey,newSubKey);
+            if (start == 0 ||start == 1 ||start == 2) {
+                rowIndex++;
+                t->setRowCount(rowIndex+1);
+                m_description = read_description(rootKey,newSubKey);
+                m_imagepath = read_imagepath(rootKey,newSubKey);
+                t->setItem(rowIndex, 1, new QTableWidgetItem(key));
+                QString imagePath = QString::fromStdString(m_imagepath);
+                QString description = QString::fromStdString(m_description);
+                RepairString(&imagePath);
+                if (!imagePath.isEmpty()) {
+                    setTableItem(t,rowIndex,imagePath,description);
+                }
             }
+
 
         }
         subIt++;
@@ -223,7 +272,7 @@ void initTableDriver(QTableWidget* t,HKEY rootKey, QString path){
 
     string subPath;
     string tmpPath;
-    DWORD type;
+    DWORD type,start;
     map<int, string>::iterator subIt = subkeyMap.begin();
 
     QString HKheader = (rootKey==HKLM) ? "HKLM\\" : "HKCU\\";
@@ -238,23 +287,26 @@ void initTableDriver(QTableWidget* t,HKEY rootKey, QString path){
         string m_description, m_imagepath;
         type = read_type(rootKey,newSubKey);
         if (type<16 ) {
-            rowIndex++;
-            t->setRowCount(rowIndex+1);
-            m_description = read_description(rootKey,newSubKey);
-            m_imagepath = read_imagepath(rootKey,newSubKey);
-            t->setItem(rowIndex, 1, new QTableWidgetItem(key));
-            QString imagePath = QString::fromStdString(m_imagepath);
-            QString description = QString::fromStdString(m_description);
-            RepairString(&imagePath);
-            if (!imagePath.isEmpty()) {
-                setTableItem(t,rowIndex,imagePath,description);
+            start = read_start(rootKey,newSubKey);
+            if (start == 0 ||start == 1 ||start == 2) {
+                rowIndex++;
+                t->setRowCount(rowIndex+1);
+                m_description = read_description(rootKey,newSubKey);
+                m_imagepath = read_imagepath(rootKey,newSubKey);
+                t->setItem(rowIndex, 1, new QTableWidgetItem(key));
+                QString imagePath = QString::fromStdString(m_imagepath);
+                QString description = QString::fromStdString(m_description);
+                RepairString(&imagePath);
+                if (!imagePath.isEmpty()) {
+                    setTableItem(t,rowIndex,imagePath,description);
+                }
+
             }
 
         }
         subIt++;
         delete [] newSubKey;
         newSubKey = NULL;
-
     }
 
 }

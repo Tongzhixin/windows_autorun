@@ -4,12 +4,92 @@
 #include <windows.h>
 #include <iostream>
 #include <stdio.h>
+#include "convert.h"
 #include <comdef.h>
 #include <combaseapi.h>
 #include <taskschd.h>
 #include <map>
+#include <ShlObj_core.h>
+#include <ShObjIdl.h>
+#include <io.h>
+#include <vector>
+#include <string>
+#include <atlbase.h>
 using namespace std;
 BOOL readAllTask(ITaskFolder* pRootFolder, HRESULT hr, BSTR allfolderName, map<string,string>* taskMap);
+int get_files(string fileFolderPath, string fileExtension, map<string,string>& file);
+int get_files(string fileFolderPath, string fileExtension, map<string,string>& file)
+{
+    std::string fileFolder = fileFolderPath + "\\*" ;
+    std::string fileName;
+    struct _finddata_t fileInfo;
+    long long findResult = _findfirst(fileFolder.c_str(), &fileInfo);
+    if (findResult == -1)
+    {
+        _findclose(findResult);
+        return 0;
+    }
+    bool flag = 0;
+
+    do
+    {   string m_name = fileInfo.name;
+        fileName = fileFolderPath + "\\" + fileInfo.name;
+        if (fileInfo.attrib == _A_ARCH)
+        {
+            file[m_name] = fileName;
+        } else if(fileInfo.attrib == _A_SUBDIR) {
+            if(strcmp(fileInfo.name,".") != 0  &&  strcmp(fileInfo.name,"..") != 0)
+                get_files(fileName,"",file);
+        } else  { //if(fileInfo.attrib == _A_NORMAL||fileInfo.attrib == _A_RDONLY||fileInfo.attrib == _A_HIDDEN||fileInfo.attrib == _A_SYSTEM)
+            if(strcmp(fileInfo.name,".") != 0  &&  strcmp(fileInfo.name,"..") != 0){
+            file[m_name] = fileName;
+            }
+        }
+    } while (_findnext(findResult, &fileInfo) == 0);
+
+    _findclose(findResult);
+    return 1;
+}
+
+void createConnectToStart(map<string, map<string,string>>& logonDir){
+    WCHAR BUF[MAX_PATH];
+    PWSTR common_path ;
+    HRESULT hr,hr2;
+    hr = SHGetKnownFolderPath(FOLDERID_CommonStartup,NULL,NULL,&common_path);
+    //hr = SHGetFolderPathW(NULL, FOLDERID_CommonStartup, NULL, 0,BUF);
+    PWSTR user_path ;
+    hr2 = SHGetKnownFolderPath(FOLDERID_Startup,NULL,NULL,&user_path);
+    if(SUCCEEDED(hr)){
+        string tmp = Wchar_tToString(common_path);
+        map<string,string> submap;
+        get_files(tmp,"",submap);
+        logonDir[tmp] = submap;
+        map<string,string>::iterator It = submap.begin();
+        while(It!=submap.end()) {
+
+            cout <<It->second<<'\n';
+            It++;
+        }
+        cout<<tmp<<'\n';
+    } else {
+        cout<<"error"<<'\n';
+    }
+    if(SUCCEEDED(hr2)){
+        string tmp = Wchar_tToString(user_path);
+        map<string,string> submap;
+        get_files(tmp,"",submap);
+        logonDir[tmp] = submap;
+        map<string,string>::iterator It = submap.begin();
+        while(It!=submap.end()) {
+            cout <<It->second<<'\n';
+            It++;
+        }
+        cout<<tmp<<'\n';
+    } else {
+        cout<<"error"<<'\n';
+    }
+}
+
 BOOL InitialiseCOM() {
     HRESULT hResult;
 
