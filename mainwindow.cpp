@@ -11,13 +11,13 @@
                 "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnceEx", \
                 "SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Run"}
 #define services "SYSTEM\\CurrentControlSet\\Services"
-#define knowndlls "System\\CurrentControlSet\\Control\\Session Manager\\KnownDlls"
+#define knowndlls "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\KnownDlls"
 void drawHeader(QTableWidget *table, int rowIndex, QString path);
 void initTablePara(QTableWidget* t);
 void initTableLogon(QTableWidget* t, HKEY rootKey, QString path);
-void initTableService(QTableWidget* t,HKEY rootKey, QString path );
+void initTableService(QTableWidget* t, HKEY rootKey, QString path );
 void initTableTask(QTableWidget* t);
-void initTableDll(QTableWidget* t);
+void initTableDll(QTableWidget* t, HKEY rootKey, QString path );
 void initTableDriver(QTableWidget* t,HKEY rootKey, QString path);
 void setTableItem(QTableWidget* t, int rowIndex, QString imagePath, QString description);
 void RepairString(QString *str);
@@ -38,17 +38,19 @@ MainWindow::MainWindow(QWidget *parent)
 
     //ui->stackedWidget->setCurrentIndex(0);
     //ui->stackedWidget->show();
-    ui->tabWidget->setCurrentIndex(3);
-    /*
+    ui->tabWidget->setCurrentIndex(4);
+
     foreach(QString path, QStringList logon)
     {
         initTableLogon(ui->tableWidget_logon, HKLM, path);
         initTableLogon(ui->tableWidget_logon, HKCU, path);
     }
+
     initTableDriver(ui->tableWidget_driver,HKLM,services);
     initTableService(ui->tableWidget_service,HKLM,services);
-    */
+
     initTableTask(ui->tableWidget_task);
+    initTableDll(ui->tableWidget_dll,HKLM,knowndlls);
 }
 
 MainWindow::~MainWindow()
@@ -70,6 +72,7 @@ void test(){
     }
 
 }
+
 void setTableItem(QTableWidget* t, int rowIndex, QString imagePath, QString description) {
     t->setRowHeight(rowIndex, 30);
     QTableWidgetItem* imagePathItem = new QTableWidgetItem(imagePath);
@@ -121,7 +124,7 @@ void initTableLogon(QTableWidget* t, HKEY rootKey, QString path){
     QString key, imagePath;
     regIt = regMap.begin();
     if (regMap.empty()) {
-        std::cout<<path.toStdString()<<"empty"<<'\n';
+        //std::cout<<path.toStdString()<<"empty"<<'\n';
         return;
     }
     QString HKheader = (rootKey==HKLM) ? "HKLM\\" : "HKCU\\";
@@ -138,6 +141,33 @@ void initTableLogon(QTableWidget* t, HKEY rootKey, QString path){
         regIt++;
     }
 }
+
+void initTableDll(QTableWidget* t, HKEY rootKey, QString path){
+    map<string, string> regMap = read_reg(rootKey, path.toLocal8Bit());
+
+    map<string, string>::iterator regIt;
+    int rowIndex = t->rowCount();
+    QString key, imagePath;
+    regIt = regMap.begin();
+    if (regMap.empty()) {
+        //std::cout<<path.toStdString()<<"empty"<<'\n';
+        return;
+    }
+    QString HKheader = (rootKey==HKLM) ? "HKLM\\" : "HKCU\\";
+    drawHeader(t, rowIndex, HKheader+path);
+    while(regIt != regMap.end()) {
+        rowIndex++;
+        t->setRowCount(rowIndex+1);
+        key = QString::fromStdString(regIt->first);
+        imagePath = "C:\\Windows\\system32\\" + QString::fromStdString(regIt->second);
+        QTableWidgetItem* keyItem = new QTableWidgetItem(key);
+        t->setItem(rowIndex, 1, keyItem);
+        RepairString(&imagePath);
+        setTableItem(t,rowIndex,imagePath,"");
+        regIt++;
+    }
+}
+
 void initTableService(QTableWidget* t,HKEY rootKey, QString path ) {
     map<int, string> subkeyMap;
     map<char*,char*> regMap;
@@ -183,6 +213,7 @@ void initTableService(QTableWidget* t,HKEY rootKey, QString path ) {
     }
 
 }
+
 void initTableDriver(QTableWidget* t,HKEY rootKey, QString path){
     map<int, string> subkeyMap;
     QString key, imagePath;
@@ -227,6 +258,7 @@ void initTableDriver(QTableWidget* t,HKEY rootKey, QString path){
     }
 
 }
+
 void initTableTask(QTableWidget* t) {
     map<string, string> taskMap;
     QString key, imagePath;
@@ -247,6 +279,7 @@ void initTableTask(QTableWidget* t) {
         taskIt++;
     }
 }
+
 
 void initTablePara(QTableWidget* t){
     QStringList headerlist = {"icon","entry","description","publisher","path","time"};

@@ -61,12 +61,12 @@ map<int, string> read_subkey(HKEY root_key,LPCSTR key_path) {
             }
         }
         else {
-            cout << "error subkey" << endl;
+            //cout << "error subkey" << endl;
         }
         RegCloseKey(hKey);
     }
     else {
-         cout << "error: open reg" << endl;
+         //cout << "error: open reg" << endl;
     }
     return reg_map;
 }
@@ -113,11 +113,11 @@ map<string, string> read_reg(HKEY root_key,LPCSTR key_path){
             }
         }
         else {
-            cout << "error subkey" << endl;
+            //cout << "error subkey" << endl;
         }
     }
     else {
-         cout << "error: open reg" << endl;
+         //cout << "error: open reg" << endl;
     }
     return reg_map;
 }
@@ -166,6 +166,7 @@ DWORD read_type(HKEY aim_rootkey, LPCWSTR key_data)
         }
         RegCloseKey(cpp_key);
     }
+    return 100000;
 
     //cout << type << endl;
 

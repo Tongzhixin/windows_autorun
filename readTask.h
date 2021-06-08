@@ -113,7 +113,7 @@ BOOL readAllTask(ITaskFolder* pRootFolder, HRESULT hr, BSTR allfolderName, map<s
                     IActionCollection* actionCollection = NULL;
                     IAction* action = NULL;
                     IExecAction* execAction = NULL;
-                    BSTR bstrTaskimg = NULL;
+                    BSTR pPath = NULL;
                     BSTR mImagePath = NULL;
                     hr = pTask->get_Definition(&taskDefination);
                     if (SUCCEEDED(hr)) {
@@ -122,26 +122,44 @@ BOOL readAllTask(ITaskFolder* pRootFolder, HRESULT hr, BSTR allfolderName, map<s
                             hr = actionCollection->get_Item(1, &action);
                             if (SUCCEEDED(hr)) {
                                  hr = action->QueryInterface(IID_IExecAction, (void**)&execAction);
-                                 if (SUCCEEDED(hr)) {
-                                     hr = execAction->get_Path(&mImagePath);
+
+                                 TASK_STATE taskState;
+                                 pTask->get_State(&taskState);
+                                 bool disabled = (taskState == TASK_STATE_DISABLED);
+                                 bool queued = (taskState == TASK_STATE_QUEUED);
+                                 bool ready = (taskState == TASK_STATE_READY);
+                                 bool running = (taskState == TASK_STATE_RUNNING);
+                                 bool unknown = (taskState == TASK_STATE_UNKNOWN);
+                                 if (ready || running || queued) {
                                      if (SUCCEEDED(hr)) {
-                                         string m_floder_name = _com_util::ConvertBSTRToString(allfolderName);
-                                         string m_task_name = _com_util::ConvertBSTRToString(taskName);
-                                         string imagePath = _com_util::ConvertBSTRToString(mImagePath);
-                                         string m_left_key = m_floder_name+m_task_name;
-                                         taskMap->insert(make_pair(m_left_key,imagePath));
-                                         SysFreeString(taskName);
-                                         execAction->Release();
+                                         hr = execAction->get_Path(&mImagePath);
+                                         if (SUCCEEDED(hr)) {
+                                             string m_floder_name = _com_util::ConvertBSTRToString(allfolderName);
+                                             string m_task_name = _com_util::ConvertBSTRToString(taskName);
+                                             string imagePath = _com_util::ConvertBSTRToString(mImagePath);
+                                             string m_left_key = m_floder_name+m_task_name;
+                                             hr = pTask->get_Path(&pPath);
+                                             if (SUCCEEDED(hr)) {
+                                                 string m1_left_key = _com_util::ConvertBSTRToString(pPath);
+
+                                                 taskMap->insert(make_pair(m1_left_key,imagePath));
+                                             }
+                                             //taskMap->insert(make_pair(m_left_key,imagePath));
+                                             execAction->Release();
+                                         }
+                                         action->Release();
                                      }
-                                     action->Release();
                                  }
+
                                  actionCollection->Release();
                             }
                             taskDefination->Release();
                         }
 
                     }
+                    SysFreeString(taskName);
                     pTask->Release();
+
                 }
 
             }

@@ -11,7 +11,6 @@
 char* TCHAR2char(const TCHAR* STR);
 TCHAR* char2TCHAR(const char* str);
 std::string TCHAR2STRING(TCHAR *STR);
-char* QString2char(QString qstr);
 std::string DwordToString(DWORD val);
 char* TCHAR2char(const TCHAR* STR)
 {
@@ -50,13 +49,6 @@ std::string TCHAR2STRING(TCHAR *STR)
     return str;
 }
 
-char* QString2char(QString qstr)
-{
-    char* ch = new char;
-    QByteArray byte = qstr.toLocal8Bit();
-    ch = byte.data();
-    return ch;
-}
 
 std::string DwordToString(DWORD val)
 {
