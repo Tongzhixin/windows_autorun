@@ -4,6 +4,7 @@
 #include "signature.h"
 #include "convert.h"
 #include "description.h"
+#include "readTask.h"
 #define logon { "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",\
                 "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer\\Run",\
                 "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce",\
@@ -47,6 +48,7 @@ MainWindow::MainWindow(QWidget *parent)
     initTableDriver(ui->tableWidget_driver,HKLM,services);
     initTableService(ui->tableWidget_service,HKLM,services);
     */
+    initTableTask(ui->tableWidget_task);
 }
 
 MainWindow::~MainWindow()
@@ -229,6 +231,21 @@ void initTableTask(QTableWidget* t) {
     map<string, string> taskMap;
     QString key, imagePath;
     int rowIndex = t->rowCount();
+    drawHeader(t, rowIndex, "Shedule Task");
+    entryTask(&taskMap);
+    map<string,string>::iterator taskIt = taskMap.begin();
+    while(taskIt != taskMap.end()) {
+        rowIndex++;
+        t->setRowCount(rowIndex+1);
+        string m_key = taskIt->first;
+        string m_imagePath = taskIt->second;
+        key = QString::fromStdString(m_key);
+        t->setItem(rowIndex, 1, new QTableWidgetItem(key));
+        imagePath = QString::fromStdString(m_imagePath);
+        RepairString(&imagePath);
+        setTableItem(t,rowIndex,imagePath,"");
+        taskIt++;
+    }
 }
 
 void initTablePara(QTableWidget* t){

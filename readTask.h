@@ -9,7 +9,7 @@
 #include <taskschd.h>
 #include <map>
 using namespace std;
-
+BOOL readAllTask(ITaskFolder* pRootFolder, HRESULT hr, BSTR allfolderName, map<string,string>* taskMap);
 BOOL InitialiseCOM() {
     HRESULT hResult;
 
@@ -26,6 +26,7 @@ BOOL InitialiseCOM() {
 
     return TRUE;
 }
+
 
 BOOL createConnectToTask(ITaskService*& pTaskService,ITaskFolder*& pRootFolder) {
     HRESULT hResult = ::CoCreateInstance(CLSID_TaskScheduler, NULL, CLSCTX_INPROC_SERVER, IID_ITaskService, (void**)&pTaskService);
@@ -45,7 +46,6 @@ BOOL createConnectToTask(ITaskService*& pTaskService,ITaskFolder*& pRootFolder) 
 
     hResult = pTaskService->Connect(server, username, domain, password);
     if (!SUCCEEDED(hResult)) {
-        pTaskService->Release();
         CoUninitialize();
         return FALSE;
     }
@@ -55,11 +55,44 @@ BOOL createConnectToTask(ITaskService*& pTaskService,ITaskFolder*& pRootFolder) 
     ::VariantClear(&domain);
     hResult = pTaskService->GetFolder(_bstr_t(L"\\"), &pRootFolder);
     if (FAILED(hResult)) {
+        pTaskService->Release();
+        CoUninitialize();
         return FALSE;
     }
     return TRUE;
 }
+BOOL entryTask(map<string,string>* taskMap) {
+    ITaskService* pTaskService = NULL;
+    ITaskFolder* pRootFolder = NULL;
 
+    HRESULT hr;
+    BOOL flag = FALSE;
+    flag = InitialiseCOM();
+    if (!flag) {
+        return flag;
+    }
+    flag = createConnectToTask(pTaskService,pRootFolder);
+    if (!flag) {
+        return flag;
+    }
+    BSTR currentFolderName = NULL;
+    hr = pRootFolder->get_Name(&currentFolderName);
+    if (SUCCEEDED(hr)) {
+        flag = readAllTask(pRootFolder,hr,currentFolderName,taskMap);
+        SysFreeString(currentFolderName);
+        if (!flag) {
+            pRootFolder->Release();
+            pTaskService->Release();
+            CoUninitialize();
+            return flag;
+        }
+
+    }
+    CoUninitialize();
+    return 1;
+
+
+}
 
 BOOL readAllTask(ITaskFolder* pRootFolder, HRESULT hr, BSTR allfolderName, map<string,string>* taskMap) {
     BSTR currentFolderName = NULL;
@@ -82,92 +115,75 @@ BOOL readAllTask(ITaskFolder* pRootFolder, HRESULT hr, BSTR allfolderName, map<s
                     IExecAction* execAction = NULL;
                     BSTR bstrTaskimg = NULL;
                     BSTR mImagePath = NULL;
-                    TASK_STATE taskState;
-                    hr = pTask->get_State(&taskState);
-                    if (FAILED(hr)) {
-                        printf("\n\tCannot get the registered task state: %x", hr);
-                        ;
-                    }
                     hr = pTask->get_Definition(&taskDefination);
-                    if (FAILED(hr))
-                    {
-                        //return FALSE;
-                        pTask->Release();
-                        continue;
-                    }
-                    hr = taskDefination->get_Actions(&actionCollection);
-                    if (FAILED(hr))
-                    {
-                        pTask->Release();
-                        continue;
-                    }
-                    taskDefination->Release();
-
-
-                    hr = actionCollection->get_Item(1, &action);
-                    if (FAILED(hr)) {
-                        pTask->Release();
-                        continue;
-                    }
-                    actionCollection->Release();
-
-                    hr = action->QueryInterface(IID_IExecAction, (void**)&execAction);
-                    if (FAILED(hr)) {
-                        pTask->Release();
+                    if (SUCCEEDED(hr)) {
+                        hr = taskDefination->get_Actions(&actionCollection);
+                        if(SUCCEEDED(hr)) {
+                            hr = actionCollection->get_Item(1, &action);
+                            if (SUCCEEDED(hr)) {
+                                 hr = action->QueryInterface(IID_IExecAction, (void**)&execAction);
+                                 if (SUCCEEDED(hr)) {
+                                     hr = execAction->get_Path(&mImagePath);
+                                     if (SUCCEEDED(hr)) {
+                                         string m_floder_name = _com_util::ConvertBSTRToString(allfolderName);
+                                         string m_task_name = _com_util::ConvertBSTRToString(taskName);
+                                         string imagePath = _com_util::ConvertBSTRToString(mImagePath);
+                                         string m_left_key = m_floder_name+m_task_name;
+                                         taskMap->insert(make_pair(m_left_key,imagePath));
+                                         SysFreeString(taskName);
+                                         execAction->Release();
+                                     }
+                                     action->Release();
+                                 }
+                                 actionCollection->Release();
+                            }
+                            taskDefination->Release();
+                        }
 
                     }
-                    action->Release();
-                    hr = execAction->get_Path(&mImagePath);
-                    if (SUCCEEDED(hr))
-                    {
-                        string m_floder_name = _com_util::ConvertBSTRToString(allfolderName);
-                        string m_task_name = _com_util::ConvertBSTRToString(taskName);
-                        string imagePath = _com_util::ConvertBSTRToString(mImagePath);
-                        string m_left_key = m_floder_name+m_task_name;
-                        taskMap->insert(make_pair(m_left_key,imagePath));
-                        SysFreeString(taskName);
-                        execAction->Release();
-                    }
+                    pTask->Release();
                 }
-                else {
-                    continue;
-                }
-                pTask->Release();
+
             }
         }
         pTaskCollection->Release();
     }
-
     ITaskFolderCollection* pSubFolders = NULL;
+    ITaskFolder* pNewTaskFolder = NULL;
     hr = pRootFolder->GetFolders(0, &pSubFolders);
 
-    if (FAILED(hr)) {
-        return FALSE;
-    }
-    LONG numberFolder = 0;
-    hr = pSubFolders->get_Count(&numberFolder);
-    for (LONG i = 0; i < numberFolder; i++) {
-        ITaskFolder* pNewTaskFolder = NULL;
-        hr = pSubFolders->get_Item(_variant_t(i + 1), &pNewTaskFolder);
-        if (FAILED(hr)) {
-            continue;
-        }
-        BSTR nameFolder = NULL;
-        hr = pNewTaskFolder->get_Name(&nameFolder);
-        if (FAILED(hr)) {
-            continue;
-        }
-        string m_name_folder = _com_util::ConvertBSTRToString(nameFolder);
-        string m_root_name = _com_util::ConvertBSTRToString(allfolderName);
-        string m_new_folder = m_name_folder + "\\" + m_root_name;
-        BSTR new_folder = _com_util::ConvertStringToBSTR(m_new_folder.c_str());
-        readAllTask(pNewTaskFolder, hr, new_folder, taskMap);
-        SysFreeString(nameFolder);
-        pNewTaskFolder->Release();
-    }
-    pSubFolders->Release();
+    if (SUCCEEDED(hr)) {
+        LONG numberFolder = 0;
+        hr = pSubFolders->get_Count(&numberFolder);
+        if (SUCCEEDED(hr)) {
+            for (LONG i = 0; i < numberFolder; i++) {
 
-    return TRUE;
+                hr = pSubFolders->get_Item(_variant_t(i + 1), &pNewTaskFolder);
+                if (SUCCEEDED(hr)) {
+                    BSTR nameFolder = NULL;
+                    hr = pNewTaskFolder->get_Name(&nameFolder);
+                    if (SUCCEEDED(hr)) {
+                        string m_name_folder = _com_util::ConvertBSTRToString(nameFolder);
+                        string m_root_name = _com_util::ConvertBSTRToString(allfolderName);
+                        string m_new_folder = m_name_folder + "\\" + m_root_name;
+                        BSTR new_folder = _com_util::ConvertStringToBSTR(m_new_folder.c_str());
+                        readAllTask(pNewTaskFolder, hr, new_folder, taskMap);
+                        SysFreeString(nameFolder);
+
+                    }
+
+
+                }
+
+            }
+            pSubFolders->Release();
+        }
+        pRootFolder->Release();
+        return TRUE;
+    }
+    pRootFolder->Release();
+
+    return FALSE;
 
 }
 
