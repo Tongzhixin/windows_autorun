@@ -22,8 +22,6 @@ BOOL GetSignaturePublisher(TCHAR *path, QString *buf);
 BOOL GetProgAndPublisherInfo(PCMSG_SIGNER_INFO pSignerInfo,PSPROG_PUBLISHERINFO Info);
 BOOL PrintCertificateInfo(PCCERT_CONTEXT pCertContext, QString *buf);
 BOOL VerifyEmbeddedSignature(LPCWSTR pwszSourceFile, QString *buf);
-BOOL GetDateOfTimeStamp(PCMSG_SIGNER_INFO pSignerInfo, SYSTEMTIME *st);
-BOOL GetTimeStampSignerInfo(PCMSG_SIGNER_INFO pSignerInfo, PCMSG_SIGNER_INFO *pCounterSignerInfo);
 
 
 BOOL GetSignaturePublisher(TCHAR *path, QString *buf){

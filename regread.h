@@ -22,6 +22,8 @@ using namespace std;
 map<string,string> read_reg(HKEY root_key,LPCSTR key_path);
 
 map<int, string> read_subkey(HKEY root_key,LPCSTR key_path);
+string readStubPath(HKEY aim_rootkey, LPCWSTR key_data);
+string read_name(HKEY aim_rootkey, LPCWSTR key_data);
 string read_imagepath(HKEY aim_rootkey, LPCWSTR key_data);
 string read_description(HKEY aim_rootkey, LPCWSTR key_data);
 DWORD read_type(HKEY aim_rootkey, LPCWSTR key_data);
@@ -148,6 +150,69 @@ string read_imagepath(HKEY aim_rootkey, LPCWSTR key_data)
     //cout << lpvalue << endl;
     return tmp2;
 }
+string read_name(HKEY aim_rootkey, LPCWSTR key_data)
+{
+    HKEY cpp_key;
+    DWORD dwtype = 0;
+    //LPBYTE lpvalue = NULL;
+    TCHAR lpvalue[MAX_VALUE_NAME];
+    DWORD dwsize = 0;
+    string tmp2 = "";
+    long ret;
+    ret = RegOpenKeyEx(aim_rootkey, key_data, 0, KEY_READ, &cpp_key);
+    if (ret == ERROR_SUCCESS)
+    {
+
+        //lpvalue = (LPBYTE)malloc(dwsize);
+        ret = RegQueryValueEx(cpp_key, _T("Localized Name"), 0, &dwtype, (LPBYTE)lpvalue, &dwsize);
+        ret = RegQueryValueEx(cpp_key, _T("Localized Name"), 0, &dwtype, (LPBYTE)lpvalue, &dwsize);
+        if (ret !=ERROR_SUCCESS) {
+            ret = RegQueryValueEx(cpp_key, _T("ComponentID"), 0, &dwtype, (LPBYTE)lpvalue, &dwsize);
+            ret = RegQueryValueEx(cpp_key, _T("ComponentID"), 0, &dwtype, (LPBYTE)lpvalue, &dwsize);
+            if (ret != ERROR_SUCCESS) {
+                RegCloseKey(cpp_key);
+                return tmp2;
+            }
+
+        }
+        RegCloseKey(cpp_key);
+    }
+    char *tmp1 = TCHAR2char(lpvalue);
+    tmp2 = tmp1;
+    delete [] tmp1;
+    tmp1 = NULL;
+    //qDebug()<<"imagepath:"<<tmp2.c_str();
+    //cout << lpvalue << endl;
+    return tmp2;
+}
+string readStubPath(HKEY aim_rootkey, LPCWSTR key_data)
+{
+    HKEY cpp_key;
+    DWORD dwtype = 0;
+    //LPBYTE lpvalue = NULL;
+    TCHAR lpvalue[MAX_VALUE_NAME];
+    DWORD dwsize = 0;
+
+    long ret;
+    ret = RegOpenKeyEx(aim_rootkey, key_data, 0, KEY_READ, &cpp_key);
+    if (ret == ERROR_SUCCESS)
+    {
+        ret = RegQueryValueEx(cpp_key, _T("StubPath"), 0, &dwtype, (LPBYTE)lpvalue, &dwsize);
+        ret = RegQueryValueEx(cpp_key, _T("StubPath"), 0, &dwtype, (LPBYTE)lpvalue, &dwsize);
+
+        RegCloseKey(cpp_key);
+        if(ret!=ERROR_SUCCESS) {
+            return "";
+        }
+    }
+    char *tmp1 = TCHAR2char(lpvalue);
+    string tmp2 = tmp1;
+    delete [] tmp1;
+    tmp1 = NULL;
+    //qDebug()<<"imagepath:"<<tmp2.c_str();
+    //cout << lpvalue << endl;
+    return tmp2;
+}
 DWORD read_type(HKEY aim_rootkey, LPCWSTR key_data)
 {
     HKEY cpp_key;
@@ -185,9 +250,11 @@ string read_description(HKEY aim_rootkey, LPCWSTR key_data)
     if (ret == ERROR_SUCCESS)
     {
         RegQueryValueEx(cpp_key, _T("Description"), 0, &dwtype, (LPBYTE)lpvalue, &dwsize);
-        //lpvalue = (LPBYTE)malloc(dwsize);
         ret = RegQueryValueEx(cpp_key, _T("Description"), 0, &dwtype, (LPBYTE)lpvalue, &dwsize);
         RegCloseKey(cpp_key);
+        if (ret!=ERROR_SUCCESS) {
+            return "";
+        }
     }
     char *tmp1 = TCHAR2char(lpvalue);
     string tmp2 = tmp1;

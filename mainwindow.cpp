@@ -12,6 +12,7 @@
                 "SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Run"}
 #define services "SYSTEM\\CurrentControlSet\\Services"
 #define knowndlls "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\KnownDlls"
+#define activex "SOFTWARE\\Microsoft\\Active Setup\\Installed Components"
 void drawHeader(QTableWidget *table, int rowIndex, QString path);
 void initTablePara(QTableWidget* t);
 void initTableLogon(QTableWidget* t, HKEY rootKey, QString path);
@@ -22,6 +23,7 @@ void initTableDriver(QTableWidget* t,HKEY rootKey, QString path);
 void setTableItem(QTableWidget* t, int rowIndex, QString imagePath, QString description);
 void RepairString(QString *str);
 void initTableLogonDir(QTableWidget* t);
+void initTableActiveX(QTableWidget* t, HKEY rootKey, QString path);
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -35,9 +37,7 @@ MainWindow::MainWindow(QWidget *parent)
     initTablePara(ui->tableWidget_driver);
     initTablePara(ui->tableWidget_task);
     initTablePara(ui->tableWidget_dll);
-
-    //ui->stackedWidget->setCurrentIndex(0);
-    //ui->stackedWidget->show();
+    initTablePara(ui->tableWidget_active);
     ui->tabWidget->setCurrentIndex(0);
 
     foreach(QString path, QStringList logon)
@@ -53,6 +53,7 @@ MainWindow::MainWindow(QWidget *parent)
     initTableDll(ui->tableWidget_dll,HKLM,knowndlls);
     initTableLogonDir(ui->tableWidget_logon);
 
+    initTableActiveX(ui->tableWidget_active,HKLM,activex);
 
 }
 
@@ -79,7 +80,7 @@ void test(){
 }
 
 void setTableItem(QTableWidget* t, int rowIndex, QString imagePath, QString description) {
-    t->setRowHeight(rowIndex, 30);
+    t->setRowHeight(rowIndex, 35);
     QTableWidgetItem* imagePathItem = new QTableWidgetItem(imagePath);
     t->setItem(rowIndex, 4, imagePathItem);
 
@@ -213,6 +214,47 @@ void initTableDll(QTableWidget* t, HKEY rootKey, QString path){
     }
 }
 
+void initTableActiveX(QTableWidget* t, HKEY rootKey, QString path) {
+    map<int, string> subkeyMap;
+    map<char*,char*> regMap;
+    QString key, imagePath;
+    int rowIndex = t->rowCount();
+
+    subkeyMap = read_subkey(rootKey,path.toLocal8Bit());
+
+    string subPath;
+    string tmpPath;
+    string m_key,m_path;
+    map<int, string>::iterator subIt = subkeyMap.begin();
+
+    QString HKheader = (rootKey==HKLM) ? "HKLM\\" : "HKCU\\";
+    drawHeader(t, rowIndex, HKheader+path);
+
+    while (subIt != subkeyMap.end()) {
+
+        subPath = subIt->second;
+        tmpPath = path.toStdString() +"\\"+subPath;
+        LPCWSTR newSubKey = (LPCWSTR)char2TCHAR(tmpPath.c_str());
+        m_key = read_name(rootKey, newSubKey);
+        if(!m_key.empty()) {
+            m_path = readStubPath(rootKey, newSubKey);
+            if(!m_path.empty()){
+                rowIndex++;
+                t->setRowCount(rowIndex+1);
+                key = QString::fromStdString(m_key);
+                imagePath = QString::fromStdString(m_path);
+                t->setItem(rowIndex, 1, new QTableWidgetItem(key));
+                RepairString(&imagePath);
+                setTableItem(t,rowIndex,imagePath,"");
+            }
+        }
+
+        subIt++;
+        delete [] newSubKey;
+        newSubKey = NULL;
+
+    }
+}
 void initTableService(QTableWidget* t,HKEY rootKey, QString path ) {
     map<int, string> subkeyMap;
     map<char*,char*> regMap;
@@ -265,7 +307,7 @@ void initTableService(QTableWidget* t,HKEY rootKey, QString path ) {
 
 void initTableDriver(QTableWidget* t,HKEY rootKey, QString path){
     map<int, string> subkeyMap;
-    QString key, imagePath;
+    QString key;
     int rowIndex = t->rowCount();
 
     subkeyMap = read_subkey(rootKey,path.toLocal8Bit());
@@ -340,14 +382,14 @@ void initTablePara(QTableWidget* t){
     t->setColumnWidth(0,40);
     t->setColumnWidth(1,150);
     t->setColumnWidth(2,250);
-    t->setColumnWidth(3,150);
-    t->setColumnWidth(4,300);
+    t->setColumnWidth(3,250);
+    t->setColumnWidth(4,380);
     t->setColumnWidth(5,180);
 }
 void drawHeader(QTableWidget* t,int rowIndex, QString path){
     t->setRowCount(rowIndex + 1);
     QTableWidgetItem* regItem = new QTableWidgetItem(path);
-    regItem->setBackgroundColor(QColor(209, 209, 255));
+    regItem->setBackgroundColor(QColor(100, 200, 255));
     t->setItem(rowIndex, 0, regItem);
     t->setSpan(rowIndex, 0, 1, 6);
 }

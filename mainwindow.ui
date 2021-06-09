@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1147</width>
-    <height>630</height>
+    <width>1258</width>
+    <height>692</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,9 +18,9 @@
     <item row="0" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>2</number>
+       <number>4</number>
       </property>
-      <widget class="QWidget" name="tabWidgetPage1" native="true">
+      <widget class="QWidget" name="tabWidgetPage1">
        <attribute name="title">
         <string>Logon</string>
        </attribute>
@@ -40,7 +40,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tabWid" native="true">
+      <widget class="QWidget" name="tabWid">
        <attribute name="title">
         <string>service</string>
        </attribute>
@@ -60,7 +60,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tabWidgetPage3" native="true">
+      <widget class="QWidget" name="tabWidgetPage3">
        <attribute name="title">
         <string>driver</string>
        </attribute>
@@ -80,7 +80,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tabWidgetPage4" native="true">
+      <widget class="QWidget" name="tabWidgetPage4">
        <attribute name="title">
         <string>shedule task</string>
        </attribute>
@@ -100,7 +100,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tabWidgetPage5" native="true">
+      <widget class="QWidget" name="tabWidgetPage5">
        <attribute name="title">
         <string>knownDll</string>
        </attribute>
@@ -108,13 +108,32 @@
         <item row="0" column="0">
          <widget class="QTableWidget" name="tableWidget_dll">
           <property name="columnCount">
-           <number>7</number>
+           <number>6</number>
           </property>
           <column>
            <property name="text">
             <string>新建列</string>
            </property>
           </column>
+          <column/>
+          <column/>
+          <column/>
+          <column/>
+          <column/>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab">
+       <attribute name="title">
+        <string>ActiveX</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_7">
+        <item row="0" column="0">
+         <widget class="QTableWidget" name="tableWidget_active">
+          <property name="columnCount">
+           <number>6</number>
+          </property>
           <column/>
           <column/>
           <column/>

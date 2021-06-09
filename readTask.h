@@ -1,6 +1,5 @@
 #ifndef READTASK_H
 #define READTASK_H
-
 #include <windows.h>
 #include <iostream>
 #include <stdio.h>
@@ -14,10 +13,14 @@
 #include <io.h>
 #include <vector>
 #include <string>
-#include <atlbase.h>
 using namespace std;
 BOOL readAllTask(ITaskFolder* pRootFolder, HRESULT hr, BSTR allfolderName, map<string,string>* taskMap);
 int get_files(string fileFolderPath, string fileExtension, map<string,string>& file);
+void createConnectToStart(map<string, map<string,string>>& logonDir);
+BOOL InitialiseCOM();
+BOOL createConnectToTask(ITaskService*& pTaskService,ITaskFolder*& pRootFolder);
+BOOL entryTask(map<string,string>* taskMap);
+BOOL readAllTask(ITaskFolder* pRootFolder, HRESULT hr, BSTR allfolderName, map<string,string>* taskMap);
 int get_files(string fileFolderPath, string fileExtension, map<string,string>& file)
 {
     std::string fileFolder = fileFolderPath + "\\*" ;
@@ -52,11 +55,9 @@ int get_files(string fileFolderPath, string fileExtension, map<string,string>& f
 }
 
 void createConnectToStart(map<string, map<string,string>>& logonDir){
-    WCHAR BUF[MAX_PATH];
     PWSTR common_path ;
     HRESULT hr,hr2;
     hr = SHGetKnownFolderPath(FOLDERID_CommonStartup,NULL,NULL,&common_path);
-    //hr = SHGetFolderPathW(NULL, FOLDERID_CommonStartup, NULL, 0,BUF);
     PWSTR user_path ;
     hr2 = SHGetKnownFolderPath(FOLDERID_Startup,NULL,NULL,&user_path);
     if(SUCCEEDED(hr)){
@@ -64,29 +65,29 @@ void createConnectToStart(map<string, map<string,string>>& logonDir){
         map<string,string> submap;
         get_files(tmp,"",submap);
         logonDir[tmp] = submap;
+        /*
         map<string,string>::iterator It = submap.begin();
         while(It!=submap.end()) {
 
             cout <<It->second<<'\n';
             It++;
         }
-        cout<<tmp<<'\n';
-    } else {
-        cout<<"error"<<'\n';
+        */
+
     }
     if(SUCCEEDED(hr2)){
         string tmp = Wchar_tToString(user_path);
         map<string,string> submap;
         get_files(tmp,"",submap);
         logonDir[tmp] = submap;
+        /*
         map<string,string>::iterator It = submap.begin();
         while(It!=submap.end()) {
             cout <<It->second<<'\n';
             It++;
         }
         cout<<tmp<<'\n';
-    } else {
-        cout<<"error"<<'\n';
+        */
     }
 }
 
@@ -170,8 +171,6 @@ BOOL entryTask(map<string,string>* taskMap) {
     }
     CoUninitialize();
     return 1;
-
-
 }
 
 BOOL readAllTask(ITaskFolder* pRootFolder, HRESULT hr, BSTR allfolderName, map<string,string>* taskMap) {
@@ -267,10 +266,7 @@ BOOL readAllTask(ITaskFolder* pRootFolder, HRESULT hr, BSTR allfolderName, map<s
                         BSTR new_folder = _com_util::ConvertStringToBSTR(m_new_folder.c_str());
                         readAllTask(pNewTaskFolder, hr, new_folder, taskMap);
                         SysFreeString(nameFolder);
-
                     }
-
-
                 }
 
             }
@@ -284,21 +280,5 @@ BOOL readAllTask(ITaskFolder* pRootFolder, HRESULT hr, BSTR allfolderName, map<s
     return FALSE;
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #endif // READTASK_H
