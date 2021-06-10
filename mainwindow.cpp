@@ -81,7 +81,19 @@ void test(){
 
 void setTableItem(QTableWidget* t, int rowIndex, QString imagePath, QString description) {
     t->setRowHeight(rowIndex, 35);
-    QTableWidgetItem* imagePathItem = new QTableWidgetItem(imagePath);
+    QTableWidgetItem* imagePathItem;
+    if(imagePath.contains("svchost")) {
+        QString tmp_description = description;
+        RepairString(&tmp_description);
+        if (tmp_description.startsWith('@')) {
+            tmp_description.replace(0,1,"");
+        }
+        tmp_description =  tmp_description.section(',',0,0);
+        imagePathItem = new QTableWidgetItem(tmp_description);
+    }else {
+        imagePathItem = new QTableWidgetItem(imagePath);
+    }
+
     t->setItem(rowIndex, 4, imagePathItem);
 
     QFileInfo file_info(imagePath.toLocal8Bit().data());
