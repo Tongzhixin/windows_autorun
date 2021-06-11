@@ -61,23 +61,7 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
-void test(){
-    /*
-    HKEY rootKey = HKLM;
-    QString path = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
-    map<string, string> regMap = read_reg(rootKey, path.toLocal8Bit());
 
-    map<string, string>::iterator regIt = regMap.begin();
-    QString key, imagePath;
-    while(regIt != regMap.end()) {
-        key = QString::fromStdString(regIt->first);
-        imagePath = QString::fromStdString(regIt->second);
-        qDebug()<<key<<":"<<imagePath;
-        regIt++;
-    }
-    */
-
-}
 
 void setTableItem(QTableWidget* t, int rowIndex, QString imagePath, QString description) {
     t->setRowHeight(rowIndex, 35);
@@ -93,7 +77,6 @@ void setTableItem(QTableWidget* t, int rowIndex, QString imagePath, QString desc
     }else {
         imagePathItem = new QTableWidgetItem(imagePath);
     }
-
     t->setItem(rowIndex, 4, imagePathItem);
 
     QFileInfo file_info(imagePath.toLocal8Bit().data());
@@ -294,13 +277,22 @@ void initTableService(QTableWidget* t,HKEY rootKey, QString path ) {
         if (type>=16 && type<100000 ) {
             start = read_start(rootKey,newSubKey);
             if (start == 0 ||start == 1 ||start == 2) {
-                rowIndex++;
-                t->setRowCount(rowIndex+1);
                 m_description = read_description(rootKey,newSubKey);
                 m_imagepath = read_imagepath(rootKey,newSubKey);
-                t->setItem(rowIndex, 1, new QTableWidgetItem(key));
                 QString imagePath = QString::fromStdString(m_imagepath);
                 QString description = QString::fromStdString(m_description);
+                if (imagePath.contains("svchost")) {
+                    tmpPath = tmpPath + "\\" + "Parameters";
+                    newSubKey = (LPCWSTR)char2TCHAR(tmpPath.c_str());
+                    m_imagepath = readServiceDll(rootKey,newSubKey);
+                    if (!m_imagepath.empty()) {
+                        imagePath = QString::fromStdString(m_imagepath);
+                        //description = ""
+                    }
+                }
+                rowIndex++;
+                t->setRowCount(rowIndex+1);
+                t->setItem(rowIndex, 1, new QTableWidgetItem(key));
                 RepairString(&imagePath);
                 if (!imagePath.isEmpty()) {
                     setTableItem(t,rowIndex,imagePath,description);

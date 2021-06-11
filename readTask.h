@@ -20,7 +20,7 @@ void createConnectToStart(map<string, map<string,string>>& logonDir);
 BOOL InitialiseCOM();
 BOOL createConnectToTask(ITaskService*& pTaskService,ITaskFolder*& pRootFolder);
 BOOL entryTask(map<string,string>* taskMap);
-BOOL readAllTask(ITaskFolder* pRootFolder, HRESULT hr, BSTR allfolderName, map<string,string>* taskMap);
+
 int get_files(string fileFolderPath, string fileExtension, map<string,string>& file)
 {
     std::string fileFolder = fileFolderPath + "\\*" ;
